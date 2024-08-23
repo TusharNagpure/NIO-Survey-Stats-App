@@ -1,36 +1,60 @@
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/83070da7805b4899820e285d2f7847b9)](https://www.codacy.com/manual/kai-morich/SimpleUsbTerminal?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=kai-morich/SimpleUsbTerminal&amp;utm_campaign=Badge_Grade)
+# NIO-Survey-Stats-App
 
-# SimpleUsbTerminal
-
-This Android app provides a line-oriented terminal / console for devices with a serial / UART interface connected with a USB-to-serial-converter.
-
-It supports USB to serial converters based on
-- FTDI FT232, FT2232, ...
-- Prolific PL2303
-- Silabs CP2102, CP2105, ...
-- Qinheng CH340, CH341
-
-and devices implementing the USB CDC protocol like
-- Arduino using ATmega32U4
-- Digispark using V-USB software USB
-- BBC micro:bit using ARM mbed DAPLink firmware
-- Pi Pico
-- ...
+## Overview
+This application has been developed for the **National Institute of Oceanography (NIO)**. The app interfaces with a GPS module via a USB serial port, receives data as NMEA strings, and displays formatted information like date-time, latitude, longitude, and altitude.
 
 ## Features
 
-- permission handling on device connection
-- foreground service to buffer receive data while the app is rotating, in background, ...
-- send BREAK
-- show control lines
-- RTS/CTS, DTR/DSR, XON/XOFF flow control
+### 1. GPS Data Handling
+- **NMEA String Parsing**: Parses NMEA sentences like `$GPGGA` and `$GPRMC` to extract latitude, longitude, altitude, and time.
+- **Real-time Display**: Displays parsed GPS data in real-time.
 
-## Credits
+### 2. Google Maps Integration
+- **Map Display**: Shows the current GPS location on Google Maps.
+- **Marker Placement**: Automatically places markers at the current location.
+- **Area Calculation**: Calculates areas based on selected points.
+- **Distance Measurement**: Measures distances between points.
 
-The app uses the [usb-serial-for-android](https://github.com/mik3y/usb-serial-for-android) library.
+### 3. Serial Terminal
+- **Raw Data Viewing**: Views raw NMEA strings from the GPS module.
+- **Pause/Resume Data Stream**: Allows pausing or resuming data streaming.
+- **Clear Data**: Clears terminal data with a single click.
 
-## Motivation
+### 4. GPS Status Information
+- **Valid Fix Indicator**: Indicates reliable GPS data reception.
+- **Internal GPS Data**: Displays internal GPS data from the device.
 
-I got various requests asking for help with Android development or source code for my
-[Serial USB Terminal](https://play.google.com/store/apps/details?id=de.kai_morich.serial_usb_terminal) app.
-Here you find a simplified version of my app.
+### 5. Data Saving and Retrieval
+- **Save GPS Data**: Saves parsed GPS data into a text file.
+- **Data Export**: Accesses saved files from the Documents directory.
+
+### 6. User Interface
+- **Dynamic UI**: Updates the UI based on received GPS data.
+- **Navigation Drawer**: Provides easy access to different app sections.
+
+## Installation
+
+1. Download the APK file from the provided link.
+2. Transfer the APK to your Android device.
+3. Install the APK on your device. Ensure installation from unknown sources is enabled.
+
+## Usage
+
+1. Connect the GPS module via USB OTG.
+2. Grant necessary permissions.
+3. Start or stop data streaming using the toggle button.
+4. View and save the GPS data as needed.
+5. To access the area and ruler tools disconnect the device using the connect/disconnect button.
+6. the data taps are added ( 1, 2, 3, 4 ) these are the tags used to mark a real entity while surveying like tree, building etc.
+7. The internal GPS terminal displays data from the mobile.
+8. On clicking the resume button the raw data starts to display vice versa if clicked again (pause) and clear button clears the terminal.
+
+## Additional Information
+
+- **Documentation**: Access downloadable documentation at [Documentation Link](https://drive.google.com/file/d/1CNUzxTM7EQfK299h_iXMmiRnMkRl4JGR/view?usp=sharing).
+- **References**: Utilizes the [Kai-Morich Simple USB Terminal](https://github.com/kai-morich/SimpleUsbTerminal) package.
+- **Additional Reference**: The app also leverages the [USB-Serial-for-Android](https://github.com/mik3y/usb-serial-for-android) library.
+
+---
+
+**Developed by Tushar Raju Nagpure**
