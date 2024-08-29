@@ -77,6 +77,46 @@
             android:contentDescription="Save Data"
             android:padding="8dp" />
 
+        <!-- 1st Icon-->
+        <ImageView
+            android:id="@+id/tap1"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/icon1"
+            android:contentDescription="Tap Data"
+            android:padding="8dp"
+            android:alpha="0.5"/>
+
+        <!-- 2nd Icon-->
+        <ImageView
+            android:id="@+id/tap2"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/icon2"
+            android:contentDescription="Tap Data"
+            android:padding="8dp"
+            android:alpha="0.5"/>
+
+        <!-- 3rd Icon-->
+        <ImageView
+            android:id="@+id/tap3"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/icon3"
+            android:contentDescription="Tap Data"
+            android:padding="8dp"
+            android:alpha="0.5"/>
+
+        <!-- 4th Icon-->
+        <ImageView
+            android:id="@+id/tap4"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/icon4"
+            android:contentDescription="Tap Data"
+            android:padding="8dp"
+            android:alpha="0.5"/>
+
         <ToggleButton
             android:id="@+id/gpsToggleButton"
             android:layout_width="45dp"

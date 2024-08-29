@@ -53,6 +53,17 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import android.content.ContentValues;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.provider.MediaStore;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 public class GpsFragment extends Fragment implements OnMapReadyCallback {
     private FusedLocationProviderClient fusedLocationClient;
@@ -78,6 +89,10 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
     private ImageView saveIcon;
     private ArrayList<String> gpsDataList;
     private static final int MAX_LIST_SIZE = 20000;
+    private ImageView Icon1;
+    private ImageView Icon2;
+    private ImageView Icon3;
+    private ImageView Icon4;
 
     @Nullable
     @Override
@@ -101,6 +116,14 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         // Initialize handler and runnable for date-time updates
         initializeDateTimeHandler();
         gpsDataList = new ArrayList<>();
+        Icon1 = view.findViewById(R.id.tap1);
+        Icon1.setOnClickListener(v -> DataTap(1));
+        Icon2 = view.findViewById(R.id.tap2);
+        Icon2.setOnClickListener(v -> DataTap(2));
+        Icon3 = view.findViewById(R.id.tap3);
+        Icon3.setOnClickListener(v -> DataTap(3));
+        Icon4 = view.findViewById(R.id.tap4);
+        Icon4.setOnClickListener(v -> DataTap(4));
         // ToggleButton listener
         gpsToggleButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
             isAreaCalculationMode = false;
@@ -110,11 +133,11 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
             if (isChecked) {
                 stopLocationUpdates();
                 gpsStatusTextView.setText("GPS paused");
-                showCustomToast("GPS paused",500);
+                showCustomToast("GPS paused", 500);
             } else {
                 startLocationUpdates();
                 gpsStatusTextView.setText("");
-                showCustomToast("GPS Monitoring resumed",500);
+                showCustomToast("GPS Monitoring resumed", 500);
             }
 
             if (googleMap != null) {
@@ -160,7 +183,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         distanceFab = view.findViewById(R.id.distanceFab);
         distanceFab.setOnClickListener(v -> {
             if (gpsToggleButton.isChecked()) {
-                if(isAreaCalculationMode){
+                if (isAreaCalculationMode) {
                     deactivateAreaCal();
                 }
                 clearMarkersAndLines(); // Clear previous lines and markers
@@ -182,11 +205,11 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         return view;
     }
 
-    private void deactivateDistCal(){
+    private void deactivateDistCal() {
         isDistanceCalculationMode = false;
     }
 
-    private void deactivateAreaCal(){
+    private void deactivateAreaCal() {
         isAreaCalculationMode = false;
     }
 
@@ -297,9 +320,6 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
     }
 
 
-
-
-
     private void initializeUI(View view) {
         latitudeTextView = view.findViewById(R.id.latitudeTextView);
         longitudeTextView = view.findViewById(R.id.longitudeTextView);
@@ -326,7 +346,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
                 }
                 for (Location location : locationResult.getLocations()) {
                     // Check if the location is from the GPS provider and has valid accuracy
-                    if (location.getProvider().equals(LocationManager.GPS_PROVIDER) && location.hasAccuracy() && location.getAccuracy() < 10) {
+                    if (location.hasAccuracy() && location.getAccuracy() < 15) {
                         gpsStatusTextView.setText("Valid fix");
                     } else {
                         gpsStatusTextView.setText("No valid fix");
@@ -358,7 +378,8 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
             } else if (isDistanceCalculationMode) {
                 addPointToPolyline(latLng);  // Add the clicked point to the polyline
             }
-        });startLocationUpdates(); // Start location updates immediately when the map is ready
+        });
+        startLocationUpdates(); // Start location updates immediately when the map is ready
     }
 
 
@@ -391,8 +412,6 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         googleMap.addMarker(new MarkerOptions().position(currentLocation).title("Current Location"));
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15));
     }
-
-
 
 
     private void initializeDateTimeHandler() {
@@ -432,43 +451,55 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void saveDataToTxtFile() {
-        // Get the "Documents" directory in the external storage
-        File directory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "GPSData");
-        if (!directory.exists()) {
-            directory.mkdirs();  // Create the directory if it doesn't exist
-        }
-
-        // Generate a unique filename using a timestamp
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-        String fileName = "nmea_data_" + timeStamp + ".txt";
-        File file = new File(directory, fileName);
-
-        FileWriter writer = null;
+        OutputStream outputStream = null;
         try {
-            writer = new FileWriter(file);
+            // Set up the file details
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+            String fileName = "nmea_data_" + timeStamp + ".txt";
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+            values.put(MediaStore.MediaColumns.MIME_TYPE, "text/plain");
 
-            // Write the header
-            writer.append("Date-Time,Latitude,Longitude,Altitude,GPS Fix Status\n");
-
-            // Write the collected data
-            for (String data : gpsDataList) {
-                writer.append(data).append("\n");
+            // Choose the directory to save in
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/GPSData");
+                Uri uri = requireContext().getContentResolver().insert(MediaStore.Files.getContentUri("external"), values);
+                if (uri != null) {
+                    outputStream = requireContext().getContentResolver().openOutputStream(uri);
+                }
+            } else {
+                File directory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "GPSData");
+                if (!directory.exists()) {
+                    directory.mkdirs();
+                }
+                File file = new File(directory, fileName);
+                outputStream = new FileOutputStream(file);
             }
 
-            showCustomToast("Data saved to " + file.getAbsolutePath(), 1000);
+            if (outputStream != null) {
+                // Write the header with the new "Check" column
+                outputStream.write("Date-Time,Latitude,Longitude,Altitude,GPS Fix Status,Check\n".getBytes());
+
+                // Write the collected data
+                for (String data : gpsDataList) {
+                    outputStream.write((data + "\n").getBytes());
+                }
+
+                // Show custom toast with the file path
+                showCustomToast("Data saved to " + fileName, 1000);
+            }
         } catch (IOException e) {
             e.printStackTrace();
             showCustomToast("Error saving data", 1000);
         } finally {
-            if (writer != null) {
+            if (outputStream != null) {
                 try {
-                    writer.close();
+                    outputStream.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
-
     }
 
 
@@ -491,5 +522,32 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         // Use a Handler to cancel the Toast after the specified duration
         new Handler(Looper.getMainLooper()).postDelayed(toast::cancel, durationInMillis);
     }
-}
 
+    private void DataTap(Integer counter) {
+        // Check if there is any data in gpsDataList
+        if (!gpsDataList.isEmpty()) {
+            // Get the last entry in gpsDataList
+            int lastIndex = gpsDataList.size() - 1;
+            String lastEntry = gpsDataList.get(lastIndex);
+
+            // Check if the entry already has a "Check" value
+            if (lastEntry.split(",").length == 5) {
+                // If not, add the counter value as the "Check" value
+                String updatedEntry = lastEntry + "," + counter.toString();
+                gpsDataList.set(lastIndex, updatedEntry);
+            } else {
+                // If it already has a "Check" value, replace it with the new one
+                String[] parts = lastEntry.split(",");
+                parts[5] = counter.toString();
+                String updatedEntry = String.join(",", parts);
+                gpsDataList.set(lastIndex, updatedEntry);
+            }
+
+            // Provide feedback to the user
+            showCustomToast("Tagged with " + counter + " at " + lastEntry.split(",")[0], 1000);
+        } else {
+            // Handle case where gpsDataList is empty (optional)
+            showCustomToast("No GPS data to tag", 1000);
+        }
+    }
+}
