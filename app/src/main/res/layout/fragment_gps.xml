@@ -68,6 +68,15 @@
         android:orientation="horizontal"
         android:layout_marginBottom="8dp">
 
+        <!-- Save icon -->
+        <ImageView
+            android:id="@+id/saveIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_save"
+            android:contentDescription="Save Data"
+            android:padding="8dp" />
+
         <ToggleButton
             android:id="@+id/gpsToggleButton"
             android:layout_width="45dp"

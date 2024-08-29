@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,7 +25,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.ToggleButton;
-
+import android.content.Context;
+import android.os.Environment;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -70,6 +75,9 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
     private GoogleMap googleMap;
     private boolean isMapReady = false;
     private static final int REQUEST_LOCATION_PERMISSION = 113;
+    private ImageView saveIcon;
+    private ArrayList<String> gpsDataList;
+    private static final int MAX_LIST_SIZE = 20000;
 
     @Nullable
     @Override
@@ -77,6 +85,8 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         View view = inflater.inflate(R.layout.fragment_gps, container, false);
         areaTextView = view.findViewById(R.id.areaTextView);
         gpsToggleButton = view.findViewById(R.id.gpsToggleButton);
+        saveIcon = view.findViewById(R.id.saveIcon);
+        saveIcon.setOnClickListener(v -> saveDataToTxtFile());
         areaFab = view.findViewById(R.id.areaFab);
         distanceFab = view.findViewById(R.id.distanceFab);
         // Initialize TextViews and ToggleButton
@@ -90,7 +100,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
 
         // Initialize handler and runnable for date-time updates
         initializeDateTimeHandler();
-
+        gpsDataList = new ArrayList<>();
         // ToggleButton listener
         gpsToggleButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
             isAreaCalculationMode = false;
@@ -362,7 +372,18 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
 
         latitudeTextView.setText(String.format(Locale.getDefault(), "%.6f %s", Math.abs(latitude), latDirection));
         longitudeTextView.setText(String.format(Locale.getDefault(), "%.6f %s", Math.abs(longitude), lonDirection));
-        altitudeTextView.setText(String.format(Locale.getDefault(), "%.1f meters", altitude));
+        altitudeTextView.setText(String.format(Locale.getDefault(), "%.1f M", altitude));
+        // Store the data in the array
+        String dateTime = dateTimeTextView.getText().toString();
+        String gpsStatus = gpsStatusTextView.getText().toString();
+        String data = String.format("%s,%s,%s,%s,%s", dateTime, latitudeTextView.getText().toString(),
+                longitudeTextView.getText().toString(), altitudeTextView.getText().toString(), gpsStatus);
+        gpsDataList.add(data);
+
+        if (gpsDataList.size() >= MAX_LIST_SIZE) {
+            saveDataToTxtFile();  // Save the data to a file
+            gpsDataList.clear();  // Clear the list to free up memory
+        }
 
         // Update the marker on the map
         LatLng currentLocation = new LatLng(latitude, longitude);
@@ -408,6 +429,46 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         if (isReceivingGPS) {
             startLocationUpdates(); // Ensure GPS updates resume if they were previously enabled
         }
+    }
+
+    private void saveDataToTxtFile() {
+        // Get the "Documents" directory in the external storage
+        File directory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "GPSData");
+        if (!directory.exists()) {
+            directory.mkdirs();  // Create the directory if it doesn't exist
+        }
+
+        // Generate a unique filename using a timestamp
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        String fileName = "nmea_data_" + timeStamp + ".txt";
+        File file = new File(directory, fileName);
+
+        FileWriter writer = null;
+        try {
+            writer = new FileWriter(file);
+
+            // Write the header
+            writer.append("Date-Time,Latitude,Longitude,Altitude,GPS Fix Status\n");
+
+            // Write the collected data
+            for (String data : gpsDataList) {
+                writer.append(data).append("\n");
+            }
+
+            showCustomToast("Data saved to " + file.getAbsolutePath(), 1000);
+        } catch (IOException e) {
+            e.printStackTrace();
+            showCustomToast("Error saving data", 1000);
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
     }
 
 
