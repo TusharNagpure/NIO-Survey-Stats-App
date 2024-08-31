@@ -2,6 +2,9 @@ package de.kai_morich.simple_usb_terminal;
 
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -93,6 +96,21 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
     private ImageView Icon2;
     private ImageView Icon3;
     private ImageView Icon4;
+
+
+
+    private BroadcastReceiver gpsDataReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (GpsForegroundService.ACTION_GPS_DATA.equals(intent.getAction())) {
+                ArrayList<String> backgroundGpsData = intent.getStringArrayListExtra(GpsForegroundService.EXTRA_GPS_DATA);
+                if (backgroundGpsData != null && !backgroundGpsData.isEmpty()) {
+                    gpsDataList.addAll(backgroundGpsData);
+                    Toast.makeText(getActivity(), "Data received: " + backgroundGpsData.size() + " items", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    };
 
     @Nullable
     @Override
@@ -200,6 +218,17 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
                 showCustomToast("Please disconnect the device", 500);
             }
         });
+
+        gpsDataList = new ArrayList<>();
+        // Your existing code to initialize UI elements and other components
+
+        // Register the receiver to listen for GPS data broadcasts
+        IntentFilter filter = new IntentFilter(GpsForegroundService.ACTION_GPS_DATA);
+        getActivity().registerReceiver(gpsDataReceiver, filter);
+
+        // Start the GPS Service when the fragment is created
+        Intent serviceIntent = new Intent(getActivity(), GpsForegroundService.class);
+        ContextCompat.startForegroundService(getActivity(), serviceIntent);
 
 
         return view;
@@ -395,11 +424,11 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         longitudeTextView.setText(String.format(Locale.getDefault(), "%.6f %s", Math.abs(longitude), lonDirection));
         altitudeTextView.setText(String.format(Locale.getDefault(), "%.1f M", altitude));
         // Store the data in the array
-        String dateTime = dateTimeTextView.getText().toString();
+        /*String dateTime = dateTimeTextView.getText().toString();
         String gpsStatus = gpsStatusTextView.getText().toString();
         String data = String.format("%s,%s,%s,%s,%s", dateTime, latitudeTextView.getText().toString(),
                 longitudeTextView.getText().toString(), altitudeTextView.getText().toString(), gpsStatus);
-        gpsDataList.add(data);
+        gpsDataList.add(data);*/
 
         if (gpsDataList.size() >= MAX_LIST_SIZE) {
             saveDataToTxtFile();  // Save the data to a file
@@ -448,6 +477,17 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         if (isReceivingGPS) {
             startLocationUpdates(); // Ensure GPS updates resume if they were previously enabled
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // Unregister the receiver when the fragment is destroyed
+        getActivity().unregisterReceiver(gpsDataReceiver);
+
+        // Stop the GPS Service when the fragment is destroyed
+        Intent serviceIntent = new Intent(getActivity(), GpsForegroundService.class);
+        getActivity().stopService(serviceIntent);
     }
 
     private void saveDataToTxtFile() {
