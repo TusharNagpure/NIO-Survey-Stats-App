@@ -1,6 +1,7 @@
 package de.kai_morich.simple_usb_terminal;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
@@ -61,6 +62,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import android.view.LayoutInflater;
+import android.widget.TextView;
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     private static final String TAG = "HomeFragment";
@@ -146,7 +149,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         dateTimeTextView = view.findViewById(R.id.dateTimeTextView);
         fixStatusTextView = view.findViewById(R.id.fixStatusTextView);
         saveIcon = view.findViewById(R.id.saveIcon);
-        saveIcon.setOnClickListener(v -> saveDataToTextFile());
+        saveIcon.setOnClickListener(v -> showSaveOptionsDialog());
         Icon1 = view.findViewById(R.id.tap1);
         Icon1.setOnClickListener(v -> DataTap(1));
         Icon2 = view.findViewById(R.id.tap2);
@@ -251,6 +254,44 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         });
 
         return view;
+    }
+
+    private void showSaveOptionsDialog() {
+        // Inflate the custom layout
+        LayoutInflater inflater = LayoutInflater.from(getActivity());
+        View dialogView = inflater.inflate(R.layout.dialog_save_options, null);
+
+        // Initialize the dialog elements
+        TextView saveTxtLabel = dialogView.findViewById(R.id.saveTxtLabel);
+        TextView saveKmlLabel = dialogView.findViewById(R.id.saveKmlLabel);
+        TextView saveBothLabel = dialogView.findViewById(R.id.saveBothLabel);
+
+        // Create the AlertDialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setView(dialogView);
+        AlertDialog dialog = builder.create();
+
+        // Set click listeners
+        View.OnClickListener saveClickListener = v -> {
+            if (v == saveTxtLabel) {
+                saveDataToTextFile();
+                dialog.dismiss();
+            } else if (v == saveKmlLabel) {
+                showCustomToast("Save as KML not yet implemented", 1000);
+                dialog.dismiss();
+            } else if (v == saveBothLabel) {
+                saveDataToTextFile(); // Call save as TXT method
+                showCustomToast("Save as both TXT and KML not yet implemented", 1000);
+                dialog.dismiss();
+            }
+        };
+
+        saveTxtLabel.setOnClickListener(saveClickListener);
+        saveKmlLabel.setOnClickListener(saveClickListener);
+        saveBothLabel.setOnClickListener(saveClickListener);
+
+        // Show the dialog
+        dialog.show();
     }
 
     private void deactivateDistCal(){

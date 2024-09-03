@@ -67,6 +67,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 
 public class GpsFragment extends Fragment implements OnMapReadyCallback {
     private FusedLocationProviderClient fusedLocationClient;
@@ -96,6 +98,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
     private ImageView Icon2;
     private ImageView Icon3;
     private ImageView Icon4;
+    private boolean addGpsDataList;
 
 
 
@@ -105,8 +108,10 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
             if (GpsForegroundService.ACTION_GPS_DATA.equals(intent.getAction())) {
                 ArrayList<String> backgroundGpsData = intent.getStringArrayListExtra(GpsForegroundService.EXTRA_GPS_DATA);
                 if (backgroundGpsData != null && !backgroundGpsData.isEmpty()) {
-                    gpsDataList.addAll(backgroundGpsData);
-                    Toast.makeText(getActivity(), "Data received: " + backgroundGpsData.size() + " items", Toast.LENGTH_SHORT).show();
+                    if(isReceivingGPS){
+                        gpsDataList.addAll(backgroundGpsData);
+                        showCustomToast("Data Recieving", 500);
+                    }
                 }
             }
         }
@@ -119,7 +124,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         areaTextView = view.findViewById(R.id.areaTextView);
         gpsToggleButton = view.findViewById(R.id.gpsToggleButton);
         saveIcon = view.findViewById(R.id.saveIcon);
-        saveIcon.setOnClickListener(v -> saveDataToTxtFile());
+        saveIcon.setOnClickListener(v -> showSaveOptionsDialog());
         areaFab = view.findViewById(R.id.areaFab);
         distanceFab = view.findViewById(R.id.distanceFab);
         // Initialize TextViews and ToggleButton
@@ -148,6 +153,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
             isDistanceCalculationMode = false;
             areaTextView.setVisibility(View.GONE);
             isReceivingGPS = !isChecked;
+
             if (isChecked) {
                 stopLocationUpdates();
                 gpsStatusTextView.setText("GPS paused");
@@ -234,6 +240,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         return view;
     }
 
+
     private void deactivateDistCal() {
         isDistanceCalculationMode = false;
     }
@@ -262,7 +269,46 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         polylinePoints.clear();
     }
 
-    private void addPointToPolygon(LatLng point) {
+    private void showSaveOptionsDialog() {
+        // Inflate the custom layout
+        LayoutInflater inflater = LayoutInflater.from(getActivity());
+        View dialogView = inflater.inflate(R.layout.dialog_save_options, null);
+
+        // Initialize the dialog elements
+        TextView saveTxtLabel = dialogView.findViewById(R.id.saveTxtLabel);
+        TextView saveKmlLabel = dialogView.findViewById(R.id.saveKmlLabel);
+        TextView saveBothLabel = dialogView.findViewById(R.id.saveBothLabel);
+
+        // Create the AlertDialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setView(dialogView);
+        AlertDialog dialog = builder.create();
+
+        // Set click listeners
+        View.OnClickListener saveClickListener = v -> {
+            if (v == saveTxtLabel) {
+                saveDataToTxtFile();
+                dialog.dismiss();
+            } else if (v == saveKmlLabel) {
+                saveDataToKmlFile();
+                dialog.dismiss();
+            } else if (v == saveBothLabel) {
+                saveDataToTxtFile(); // Call save as TXT method
+                saveDataToKmlFile();//Call save as KML method
+                dialog.dismiss();
+            }
+        };
+
+        saveTxtLabel.setOnClickListener(saveClickListener);
+        saveKmlLabel.setOnClickListener(saveClickListener);
+        saveBothLabel.setOnClickListener(saveClickListener);
+
+        // Show the dialog
+        dialog.show();
+    }
+
+
+        private void addPointToPolygon(LatLng point) {
         polygonPoints.add(point);  // Add the point to the list of polygon points
 
         // Remove the old polygon if it exists
@@ -541,6 +587,140 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
             }
         }
     }
+
+    private void saveDataToKmlFile() {
+        OutputStream outputStream = null;
+        try {
+            // Set up the file details
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+            String fileName = "gps_data_" + timeStamp + ".kml";
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+            values.put(MediaStore.MediaColumns.MIME_TYPE, "application/vnd.google-earth.kml+xml");
+
+            // Choose the directory to save in
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/GPSData");
+                Uri uri = requireContext().getContentResolver().insert(MediaStore.Files.getContentUri("external"), values);
+                if (uri != null) {
+                    outputStream = requireContext().getContentResolver().openOutputStream(uri);
+                }
+            } else {
+                File directory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "GPSData");
+                if (!directory.exists()) {
+                    directory.mkdirs();
+                }
+                File file = new File(directory, fileName);
+                outputStream = new FileOutputStream(file);
+            }
+
+            if (outputStream != null) {
+                // Start the KML document
+                outputStream.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n".getBytes());
+                outputStream.write("<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n".getBytes());
+                outputStream.write("<Document>\n".getBytes());
+                outputStream.write("<name>GPS Data</name>\n".getBytes());
+
+                // Define styles for different check values
+                outputStream.write("<Style id=\"markerStyle1\">\n".getBytes());
+                outputStream.write("<IconStyle>\n".getBytes());
+                outputStream.write("<Icon>\n".getBytes());
+                outputStream.write("<href>http://maps.google.com/mapfiles/kml/paddle/blu-circle.png</href>\n".getBytes()); // No newlines, no quotes
+                outputStream.write("</Icon>\n".getBytes());
+                outputStream.write("<scale>1.2</scale>\n".getBytes());
+                outputStream.write("</IconStyle>\n".getBytes());
+                outputStream.write("</Style>\n".getBytes());
+
+                outputStream.write("<Style id=\"markerStyle2\">\n".getBytes());
+                outputStream.write("<IconStyle>\n".getBytes());
+                outputStream.write("<Icon>\n".getBytes());
+                outputStream.write("<href>http://maps.google.com/mapfiles/kml/paddle/grn-circle.png</href>\n".getBytes()); // No newlines, no quotes
+                outputStream.write("</Icon>\n".getBytes());
+                outputStream.write("<scale>1.2</scale>\n".getBytes());
+                outputStream.write("</IconStyle>\n".getBytes());
+                outputStream.write("</Style>\n".getBytes());
+
+                outputStream.write("<Style id=\"markerStyle3\">\n".getBytes());
+                outputStream.write("<IconStyle>\n".getBytes());
+                outputStream.write("<Icon>\n".getBytes());
+                outputStream.write("<href>http://maps.google.com/mapfiles/kml/paddle/ylw-circle.png</href>\n".getBytes()); // No newlines, no quotes
+                outputStream.write("</Icon>\n".getBytes());
+                outputStream.write("<scale>1.2</scale>\n".getBytes());
+                outputStream.write("</IconStyle>\n".getBytes());
+                outputStream.write("</Style>\n".getBytes());
+
+                outputStream.write("<Style id=\"markerStyle4\">\n".getBytes());
+                outputStream.write("<IconStyle>\n".getBytes());
+                outputStream.write("<Icon>\n".getBytes());
+                outputStream.write("<href>http://maps.google.com/mapfiles/kml/paddle/purple-circle.png</href>\n".getBytes()); // No newlines, no quotes
+                outputStream.write("</Icon>\n".getBytes());
+                outputStream.write("<scale>1.2</scale>\n".getBytes());
+                outputStream.write("</IconStyle>\n".getBytes());
+                outputStream.write("</Style>\n".getBytes());
+
+                outputStream.write("<Style id=\"defaultMarkerStyle\">\n".getBytes());
+                outputStream.write("<IconStyle>\n".getBytes());
+                outputStream.write("<Icon>\n".getBytes());
+                outputStream.write("<href>http://maps.google.com/mapfiles/kml/paddle/red-circle.png</href>\n".getBytes()); // No newlines, no quotes
+                outputStream.write("</Icon>\n".getBytes());
+                outputStream.write("<scale>1.2</scale>\n".getBytes());
+                outputStream.write("</IconStyle>\n".getBytes());
+                outputStream.write("</Style>\n".getBytes());
+
+                // Write each GPS entry as a Placemark with the appropriate style
+                for (String data : gpsDataList) {
+                    String[] parts = data.split(",");
+                    if (parts.length >= 5) { // Ensure there's latitude, longitude, altitude, and check
+                        String dateTime = parts[0];
+                        String latitude = parts[1];
+                        String longitude = parts[2];
+                        String altitude = parts[3];
+                        String check = (parts.length > 5) ? parts[5] : null; // Safely get the check value if it exists
+
+                        // Determine the style to use
+                        String styleUrl = "#defaultMarkerStyle";
+                        if ("1".equals(check)) {
+                            styleUrl = "#markerStyle1";
+                        } else if ("2".equals(check)) {
+                            styleUrl = "#markerStyle2";
+                        } else if ("3".equals(check)) {
+                            styleUrl = "#markerStyle3";
+                        } else if ("4".equals(check)) {
+                            styleUrl = "#markerStyle4";
+                        }
+
+                        outputStream.write("<Placemark>\n".getBytes());
+                        outputStream.write(("<name>" + dateTime + "</name>\n").getBytes());
+                        outputStream.write(("<styleUrl>" + styleUrl + "</styleUrl>\n").getBytes()); // Apply the determined style
+                        outputStream.write("<Point>\n".getBytes());
+                        outputStream.write(("<coordinates>" + longitude + "," + latitude + "," + altitude + "</coordinates>\n").getBytes());
+                        outputStream.write("</Point>\n".getBytes());
+                        outputStream.write("</Placemark>\n".getBytes());
+                    }
+                }
+
+                // End the KML document
+                outputStream.write("</Document>\n".getBytes());
+                outputStream.write("</kml>\n".getBytes());
+
+                // Show custom toast with the file path
+                showCustomToast("KML data saved to " + fileName, 1000);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            showCustomToast("Error saving KML data", 1000);
+        } finally {
+            if (outputStream != null) {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+
 
 
     @Override
