@@ -548,7 +548,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
 
             // Choose the directory to save in
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/GPSData");
+                values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/NioSurveyStats/InternalGPSDataTxt");
                 Uri uri = requireContext().getContentResolver().insert(MediaStore.Files.getContentUri("external"), values);
                 if (uri != null) {
                     outputStream = requireContext().getContentResolver().openOutputStream(uri);
@@ -600,7 +600,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
 
             // Choose the directory to save in
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/GPSData");
+                values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/NioSurveyStats/InternalGPSDataKml");
                 Uri uri = requireContext().getContentResolver().insert(MediaStore.Files.getContentUri("external"), values);
                 if (uri != null) {
                     outputStream = requireContext().getContentResolver().openOutputStream(uri);

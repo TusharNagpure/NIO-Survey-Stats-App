@@ -650,7 +650,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         ContentValues values = new ContentValues();
         values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
         values.put(MediaStore.MediaColumns.MIME_TYPE, "text/plain");
-        values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS);
+        values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/NioSurveyStats/ExternalGPSDataTxt");
 
         ContentResolver contentResolver = getActivity().getContentResolver();
         Uri fileUri = contentResolver.insert(MediaStore.Files.getContentUri("external"), values);
