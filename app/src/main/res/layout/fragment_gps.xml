@@ -1,0 +1,282 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- Big box for maps -->
+    <FrameLayout
+        android:id="@+id/mapContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- Google Map -->
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <!-- Floating TextView for displaying area -->
+        <TextView
+            android:id="@+id/areaTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white"
+            android:textColor="@android:color/black"
+            android:padding="8dp"
+            android:textSize="16sp"
+            android:layout_gravity="end|top"
+            android:layout_margin="16dp"
+            android:text="Area: 0 sq km"
+            android:visibility="gone" />
+
+        <!-- Floating Action Button for Area Calculation -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/areaFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|bottom"
+            android:layout_marginBottom="89dp"
+            android:layout_marginStart="20dp"
+            android:backgroundTint="@android:color/white"
+            android:contentDescription="Area Ruler"
+            android:src="@drawable/area_icon"
+            app:maxImageSize="45dp"/>
+
+        <!-- Floating Action Button for Polyline Calculation (Distance) -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/distanceFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|bottom"
+            android:layout_marginBottom="28dp"
+            android:layout_marginStart="20dp"
+            android:backgroundTint="@android:color/white"
+            android:contentDescription="Distance Ruler"
+            android:src="@drawable/ruler_icon"
+            app:maxImageSize="40dp"/>
+
+    </FrameLayout>
+
+    <!-- Save and Tap Icons -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <!-- Save icon -->
+        <ImageView
+            android:id="@+id/saveIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_save"
+            android:contentDescription="Save Data"
+            android:padding="8dp" />
+
+        <!-- Tap Icons -->
+        <ImageView
+            android:id="@+id/tap1"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/icon1"
+            android:contentDescription="Tap Data 1"
+            android:padding="8dp"
+            android:alpha="0.5"/>
+
+        <ImageView
+            android:id="@+id/tap2"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/icon2"
+            android:contentDescription="Tap Data 2"
+            android:padding="8dp"
+            android:alpha="0.5"/>
+
+        <ImageView
+            android:id="@+id/tap3"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/icon3"
+            android:contentDescription="Tap Data 3"
+            android:padding="8dp"
+            android:alpha="0.5"/>
+
+        <ImageView
+            android:id="@+id/tap4"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/icon4"
+            android:contentDescription="Tap Data 4"
+            android:padding="8dp"
+            android:alpha="0.5"/>
+
+        <!-- GPS Toggle Button -->
+        <ToggleButton
+            android:id="@+id/gpsToggleButton"
+            android:layout_width="45dp"
+            android:layout_height="match_parent"
+            android:alpha="0.5"
+            android:background="@drawable/connect"
+            android:padding="8dp"
+            android:textOff=""
+            android:textOn="" />
+
+        <!-- Click ImageView to trigger popup menu -->
+        <ImageView
+            android:id="@+id/click"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/click_foreground"
+            android:contentDescription="Click for Options"
+            android:alpha="0.5"/>
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Footer Information Grid -->
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:rowCount="2"
+        android:columnCount="2"
+        android:padding="8dp"
+        android:layout_gravity="fill">
+
+        <!-- Date-Time field and value -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="4dp"
+            android:layout_columnWeight="1"
+            android:gravity="center">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Date-Time"
+                android:textSize="18sp"
+                android:textColor="@android:color/darker_gray"
+                android:gravity="center"/>
+            <TextView
+                android:id="@+id/dateTimeTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N/A"
+                android:textSize="16sp"
+                android:textColor="@android:color/black"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"/>
+        </LinearLayout>
+
+        <!-- GPS Fix Status field and value -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="4dp"
+            android:layout_columnWeight="1"
+            android:gravity="center">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GPS Fix Status"
+                android:textSize="18sp"
+                android:textColor="@android:color/darker_gray"
+                android:gravity="center"/>
+            <TextView
+                android:id="@+id/fixStatusTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N/A"
+                android:textSize="16sp"
+                android:textColor="@android:color/black"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"/>
+        </LinearLayout>
+
+        <!-- Latitude field and value -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="4dp"
+            android:layout_columnWeight="1"
+            android:gravity="center">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Latitude"
+                android:textSize="18sp"
+                android:textColor="@android:color/darker_gray"
+                android:gravity="center"/>
+            <TextView
+                android:id="@+id/latitudeTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N/A"
+                android:textSize="16sp"
+                android:textColor="@android:color/black"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <!-- Longitude field and value -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="4dp"
+            android:layout_columnWeight="1"
+            android:gravity="center">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Longitude"
+                android:textSize="18sp"
+                android:textColor="@android:color/darker_gray"
+                android:gravity="center"/>
+            <TextView
+                android:id="@+id/longitudeTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N/A"
+                android:textSize="16sp"
+                android:textColor="@android:color/black"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <!-- Altitude field and value -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="4dp"
+            android:layout_columnWeight="1"
+            android:gravity="center">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Altitude"
+                android:textSize="18sp"
+                android:textColor="@android:color/darker_gray"
+                android:gravity="center"/>
+            <TextView
+                android:id="@+id/altitudeTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N/A"
+                android:textSize="16sp"
+                android:textColor="@android:color/black"
+                android:gravity="center"/>
+        </LinearLayout>
+    </GridLayout>
+</LinearLayout>

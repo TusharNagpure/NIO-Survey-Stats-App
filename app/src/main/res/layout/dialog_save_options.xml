@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Heading TextView -->
+    <TextView
+        android:id="@+id/saveOptionsHeading"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save Options"
+        android:gravity="center"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:paddingBottom="16dp"
+        android:textColor="@android:color/black" />
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#E0E0E0"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Save as txt option -->
+    <TextView
+        android:id="@+id/saveTxtLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save as txt"
+        android:gravity="center_vertical"
+        android:textSize="18sp"
+        android:padding="12dp"
+        android:textColor="@android:color/black"
+        android:background="?attr/selectableItemBackground" />
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#E0E0E0" />
+
+    <!-- Save as kml option -->
+    <TextView
+        android:id="@+id/saveKmlLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save as kml"
+        android:gravity="center_vertical"
+        android:textSize="18sp"
+        android:padding="12dp"
+        android:textColor="@android:color/black"
+        android:background="?attr/selectableItemBackground" />
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#E0E0E0" />
+
+    <!-- Save Both option -->
+    <TextView
+        android:id="@+id/saveBothLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save Both"
+        android:gravity="center_vertical"
+        android:textSize="18sp"
+        android:padding="12dp"
+        android:textColor="@android:color/black"
+        android:background="?attr/selectableItemBackground" />
+
+</LinearLayout>
