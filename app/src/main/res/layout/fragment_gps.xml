@@ -2,6 +2,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
 
     <!-- Big box for maps -->
@@ -45,6 +46,7 @@
             android:src="@drawable/area_icon"
             app:maxImageSize="45dp"/>
 
+
         <!-- Floating Action Button for Polyline Calculation (Distance) -->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/distanceFab"
@@ -86,6 +88,7 @@
             android:padding="8dp"
             android:alpha="0.5"/>
 
+        <!-- 2nd Icon-->
         <ImageView
             android:id="@+id/tap2"
             android:layout_width="48dp"
@@ -95,6 +98,7 @@
             android:padding="8dp"
             android:alpha="0.5"/>
 
+        <!-- 3rd Icon-->
         <ImageView
             android:id="@+id/tap3"
             android:layout_width="48dp"
@@ -104,6 +108,7 @@
             android:padding="8dp"
             android:alpha="0.5"/>
 
+        <!-- 4th Icon-->
         <ImageView
             android:id="@+id/tap4"
             android:layout_width="48dp"

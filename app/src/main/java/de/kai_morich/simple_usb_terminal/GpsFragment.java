@@ -180,6 +180,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
             }
 
             if (googleMap != null) {
+                googleMap.clear();
                 clearMarkersAndLines();
                 clearplacedmarker();
             }
@@ -552,7 +553,19 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         latitudeTextView.setText(String.format(Locale.getDefault(), "%.6f %s", Math.abs(latitude), latDirection));
         longitudeTextView.setText(String.format(Locale.getDefault(), "%.6f %s", Math.abs(longitude), lonDirection));
         altitudeTextView.setText(String.format(Locale.getDefault(), "%.1f M", altitude));
+        // Store the data in the array
+        /*String dateTime = dateTimeTextView.getText().toString();
+        String gpsStatus = gpsStatusTextView.getText().toString();
+        String data = String.format("%s,%s,%s,%s,%s", dateTime, latitudeTextView.getText().toString(),
+                longitudeTextView.getText().toString(), altitudeTextView.getText().toString(), gpsStatus);
+        gpsDataList.add(data);*/
 
+        if (gpsDataList.size() >= MAX_LIST_SIZE) {
+            saveDataToTxtFile();  // Save the data to a file
+            gpsDataList.clear();  // Clear the list to free up memory
+        }
+
+        // Update the marker on the map
         LatLng currentLocation = new LatLng(latitude, longitude);
 
         // Check if `currentLocationMarker` already exists
@@ -576,7 +589,6 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
             gpsDataList.clear();
         }
     }
-
 
 
     private void initializeDateTimeHandler() {
@@ -834,14 +846,19 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void DataTap(Integer counter) {
+        // Check if there is any data in gpsDataList
         if (!gpsDataList.isEmpty()) {
+            // Get the last entry in gpsDataList
             int lastIndex = gpsDataList.size() - 1;
             String lastEntry = gpsDataList.get(lastIndex);
 
+            // Check if the entry already has a "Check" value
             if (lastEntry.split(",").length == 5) {
+                // If not, add the counter value as the "Check" value
                 String updatedEntry = lastEntry + "," + counter.toString();
                 gpsDataList.set(lastIndex, updatedEntry);
             } else {
+                // If it already has a "Check" value, replace it with the new one
                 String[] parts = lastEntry.split(",");
                 parts[5] = counter.toString();
                 String updatedEntry = String.join(",", parts);
@@ -880,6 +897,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
 
             showCustomToast("Tagged with " + counter + " at " + parts[0], 1000);
         } else {
+            // Handle case where gpsDataList is empty (optional)
             showCustomToast("No GPS data to tag", 1000);
         }
     }
