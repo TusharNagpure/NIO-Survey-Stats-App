@@ -8,5 +8,5 @@
         android:title="Place marker" />
     <item
         android:id="@+id/item3"
-        android:title="Option 3" />
+        android:title="Pause/Play Data Reception" />
 </menu>

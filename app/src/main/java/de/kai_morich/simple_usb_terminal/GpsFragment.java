@@ -18,6 +18,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.PopupMenu;
@@ -73,6 +74,8 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.widget.EditText;
+
 
 public class GpsFragment extends Fragment implements OnMapReadyCallback {
     private FusedLocationProviderClient fusedLocationClient;
@@ -91,6 +94,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
     private com.google.android.gms.maps.model.Polyline polyline;
     private boolean isDistanceCalculationMode = false;
     private FloatingActionButton distanceFab;
+    private FloatingActionButton optionsFab;
     private TextView areaTextView;
     private GoogleMap googleMap;
     private boolean isMapReady = false;
@@ -108,6 +112,10 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
     private ImageView click;
     private boolean isPlacingMarker = false;
     private Marker lastplacedmarker; // Holds the last marker placed
+    private ToggleButton pausePlayToggleButton;
+    private boolean isReceivingData = false;
+    private View recordingIndicator;
+    private boolean isRecording = false;
 
 
 
@@ -115,13 +123,13 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
     private BroadcastReceiver gpsDataReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (GpsForegroundService.ACTION_GPS_DATA.equals(intent.getAction())) {
+            if (GpsForegroundService.ACTION_GPS_DATA.equals(intent.getAction()) && isReceivingData) {
                 ArrayList<String> backgroundGpsData = intent.getStringArrayListExtra(GpsForegroundService.EXTRA_GPS_DATA);
                 if (backgroundGpsData != null && !backgroundGpsData.isEmpty()) {
-                    if(isReceivingGPS){
+                    if (isReceivingGPS) {
                         gpsDataList.addAll(backgroundGpsData);
-                        showCustomToast("Data Recieving", 500);
-                    }
+                        showCustomToast("Data Receiving", 500);
+                        updateRecordingIndicator(true);                    }
                 }
             }
         }
@@ -137,12 +145,20 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         saveIcon.setOnClickListener(v -> showSaveOptionsDialog());
         areaFab = view.findViewById(R.id.areaFab);
         distanceFab = view.findViewById(R.id.distanceFab);
+        optionsFab = view.findViewById(R.id.optionsFab);
+        recordingIndicator = new View(getContext()); // Create the indicator view
+        recordingIndicator.setLayoutParams(new ViewGroup.LayoutParams(40, 40));
+        recordingIndicator.setBackgroundResource(R.drawable.circle_background_green);
+
+        ((ViewGroup) view).addView(recordingIndicator);
+
+        view.post(() -> {
+            recordingIndicator.setX(50);
+            recordingIndicator.setY(20);
+        });// Add the indicator to the layout
         // Initialize TextViews and ToggleButton
         initializeUI(view);
         click = view.findViewById(R.id.click);
-
-        // Set a click listener for the ImageView to show the popup menu
-        click.setOnClickListener(this::showPopupMenu);
 
 
         // Setup map fragment
@@ -168,6 +184,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
             isDistanceCalculationMode = false;
             areaTextView.setVisibility(View.GONE);
             isReceivingGPS = !isChecked;
+            recordingIndicator.setBackgroundResource(R.drawable.circle_background_green);
 
             if (isChecked) {
                 stopLocationUpdates();
@@ -177,12 +194,14 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
                 startLocationUpdates();
                 gpsStatusTextView.setText("");
                 showCustomToast("GPS Monitoring resumed", 500);
+                if(isRecording){
+                    recordingIndicator.setBackgroundResource(R.drawable.circle_background);
+                }
+
             }
 
             if (googleMap != null) {
-                googleMap.clear();
                 clearMarkersAndLines();
-                clearplacedmarker();
             }
         });
 
@@ -191,7 +210,11 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
             if (gpsToggleButton.isChecked()) {
                 if (isDistanceCalculationMode) {
                     deactivateDistCal();
+
+                }
+                if (isPlacingMarker) {
                     deactivatePlacedmarker();
+
                 }
                 clearMarkersAndLines();
                 clearplacedmarker();
@@ -227,7 +250,11 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
             if (gpsToggleButton.isChecked()) {
                 if (isAreaCalculationMode) {
                     deactivateAreaCal();
+
+                }
+                if (isPlacingMarker) {
                     deactivatePlacedmarker();
+
                 }
                 clearMarkersAndLines(); // Clear previous lines and markers
                 clearplacedmarker();
@@ -256,51 +283,64 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         Intent serviceIntent = new Intent(getActivity(), GpsForegroundService.class);
         ContextCompat.startForegroundService(getActivity(), serviceIntent);
 
+        optionsFab.setOnClickListener(v -> {
+            if (gpsToggleButton.isChecked()) {
+                isPlacingMarker = !isPlacingMarker;
+                deactivateDistCal();
+                deactivateAreaCal();
+                clearMarkersAndLines();
+
+                if (isPlacingMarker) {
+                    showCustomToast("Tap anywhere on the map to place a marker", 500);
+                } else if (lastplacedmarker != null) {
+                    lastplacedmarker.remove();
+
+                    showCustomToast("Marker placement mode turned off", 500);
+                }
+            } else {
+                showCustomToast("Please disconnect the device", 500);
+            }
+        });
+
+        pausePlayToggleButton = view.findViewById(R.id.pausePlayToggleButton);
+        pausePlayToggleButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            isReceivingData = isChecked;
+            isRecording = isChecked;
+            if(!gpsToggleButton.isChecked()){
+            if (isChecked) {
+                pausePlayToggleButton.setBackgroundResource(R.drawable.ic_pause_click_foreground);
+                updateRecordingIndicator(true);
+                showCustomToast("Data logging started", 500);
+
+            } else {
+                pausePlayToggleButton.setBackgroundResource(R.drawable.ic_play_click_foreground);
+                updateRecordingIndicator(false);
+                showCustomToast("Data logging paused", 500);
+
+            }}
+            else {
+                showCustomToast("Please connect the device",500);
+            }
+        });
+        // Replace this in your onCreateView or initialization code
+        click.setOnClickListener(v -> {
+            Toast.makeText(getContext(), "Markers cleared", Toast.LENGTH_SHORT).show();
+            googleMap.clear();
+        });
+
 
         return view;
     }
-
-    private void showPopupMenu(View view) {
-        PopupMenu popup = new PopupMenu(requireContext(), view);
-        MenuInflater inflater = popup.getMenuInflater();
-        inflater.inflate(R.menu.popup_menu, popup.getMenu());
-
-        popup.setOnMenuItemClickListener(this::onMenuItemClick);
-        popup.show();
-    }
-
-    // Handle menu item clicks
-    private boolean onMenuItemClick(MenuItem item) {
-        if (item.getItemId() == R.id.item1) {
-            Toast.makeText(getContext(), "Markers cleared", Toast.LENGTH_SHORT).show();
-            googleMap.clear();
-            return true;
-        }  else if (item.getItemId() == R.id.item2) {
-            if (gpsToggleButton.isChecked()) {
-            // Toggle the marker placement mode
-            isPlacingMarker = !isPlacingMarker;
-            deactivateDistCal();
-            deactivateAreaCal();
-            clearMarkersAndLines();
-            // Update the title of item2 based on the toggle state
-            if (isPlacingMarker) {
-                showCustomToast("Tap anywhere on the map to place a marker",500);
+    private void updateRecordingIndicator(boolean isRecording) {
+        if (recordingIndicator != null) {
+            if (isRecording) {
+                recordingIndicator.setBackgroundResource(R.drawable.circle_background);// Red when recording
             } else {
-                lastplacedmarker.remove();
-                showCustomToast( "Marker placement mode turned off", 500);
-
-            }}
-            else{
-                showCustomToast("Please disconnect the device",500);
+                recordingIndicator.setBackgroundResource(R.drawable.circle_background_green); // Green when not recording
             }
-            return true;
-        } else if (item.getItemId() == R.id.item3) {
-            Toast.makeText(getContext(), "Option 3 selected", Toast.LENGTH_SHORT).show();
-            return true;
-        } else {
-            return false;
         }
     }
+
 
     private void deactivateDistCal() {
         isDistanceCalculationMode = false;
@@ -358,17 +398,42 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
 
         // Set click listeners
         View.OnClickListener saveClickListener = v -> {
-            if (v == saveTxtLabel) {
-                saveDataToTxtFile();
+            // Create a new dialog for entering file name
+            AlertDialog.Builder nameDialogBuilder = new AlertDialog.Builder(getActivity());
+            View nameDialogView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_enter_filename, null);
+            nameDialogBuilder.setView(nameDialogView);
+
+
+            EditText fileNameInput = nameDialogView.findViewById(R.id.fileNameInput);
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+            fileNameInput.setText("gps_data_" + timeStamp); // Set default file name
+            fileNameInput.setSelection(0, fileNameInput.getText().length()); // Highlight the text
+            // Automatically show the keyboard when the dialog is displayed
+            fileNameInput.requestFocus();
+            nameDialogView.postDelayed(() -> {
+                InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0); // Forcefully show the keyboard
+                }
+            }, 200);
+
+
+
+            nameDialogBuilder.setPositiveButton("Save", (dialogInterface, which) -> {
+                String fileName = fileNameInput.getText().toString();
+
+                if (v == saveTxtLabel) {
+                    saveDataToTxtFile(fileName);
+                } else if (v == saveKmlLabel) {
+                    saveDataToKmlFile(fileName);
+                } else if (v == saveBothLabel) {
+                    saveDataToTxtFile(fileName); // Save as TXT
+                    saveDataToKmlFile(fileName); // Save as KML
+                }
                 dialog.dismiss();
-            } else if (v == saveKmlLabel) {
-                saveDataToKmlFile();
-                dialog.dismiss();
-            } else if (v == saveBothLabel) {
-                saveDataToTxtFile(); // Call save as TXT method
-                saveDataToKmlFile();//Call save as KML method
-                dialog.dismiss();
-            }
+            });
+            nameDialogBuilder.setNegativeButton("Cancel", (dialogInterface, which) -> dialogInterface.dismiss());
+            nameDialogBuilder.create().show();
         };
 
         saveTxtLabel.setOnClickListener(saveClickListener);
@@ -380,7 +445,8 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
     }
 
 
-        private void addPointToPolygon(LatLng point) {
+
+    private void addPointToPolygon(LatLng point) {
         polygonPoints.add(point);  // Add the point to the list of polygon points
 
         // Remove the old polygon if it exists
@@ -553,15 +619,11 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         latitudeTextView.setText(String.format(Locale.getDefault(), "%.6f %s", Math.abs(latitude), latDirection));
         longitudeTextView.setText(String.format(Locale.getDefault(), "%.6f %s", Math.abs(longitude), lonDirection));
         altitudeTextView.setText(String.format(Locale.getDefault(), "%.1f M", altitude));
-        // Store the data in the array
-        /*String dateTime = dateTimeTextView.getText().toString();
-        String gpsStatus = gpsStatusTextView.getText().toString();
-        String data = String.format("%s,%s,%s,%s,%s", dateTime, latitudeTextView.getText().toString(),
-                longitudeTextView.getText().toString(), altitudeTextView.getText().toString(), gpsStatus);
-        gpsDataList.add(data);*/
 
         if (gpsDataList.size() >= MAX_LIST_SIZE) {
-            saveDataToTxtFile();  // Save the data to a file
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+            String fileName = "gps_data_" + timeStamp + ".kml";
+            saveDataToTxtFile(fileName);  // Save the data to a file
             gpsDataList.clear();  // Clear the list to free up memory
         }
 
@@ -583,11 +645,6 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         // Move the camera to the current location
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15));
 
-        // Save the GPS data to the list if it reaches a certain size
-        if (gpsDataList.size() >= MAX_LIST_SIZE) {
-            saveDataToTxtFile();
-            gpsDataList.clear();
-        }
     }
 
 
@@ -638,12 +695,10 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         getActivity().stopService(serviceIntent);
     }
 
-    private void saveDataToTxtFile() {
+    private void saveDataToTxtFile(String fileName) {
         OutputStream outputStream = null;
         try {
             // Set up the file details
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-            String fileName = "nmea_data_" + timeStamp + ".txt";
             ContentValues values = new ContentValues();
             values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
             values.put(MediaStore.MediaColumns.MIME_TYPE, "text/plain");
@@ -675,6 +730,9 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
 
                 // Show custom toast with the file path
                 showCustomToast("Data saved to " + fileName, 1000);
+
+                // Clear the data list after saving
+                gpsDataList.clear();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -690,12 +748,11 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         }
     }
 
-    private void saveDataToKmlFile() {
+
+    private void saveDataToKmlFile(String fileName) {
         OutputStream outputStream = null;
         try {
             // Set up the file details
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-            String fileName = "gps_data_" + timeStamp + ".kml";
             ContentValues values = new ContentValues();
             values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
             values.put(MediaStore.MediaColumns.MIME_TYPE, "application/vnd.google-earth.kml+xml");
@@ -804,6 +861,8 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
                 // End the KML document
                 outputStream.write("</Document>\n".getBytes());
                 outputStream.write("</kml>\n".getBytes());
+                // Clear the data list after saving
+                gpsDataList.clear();
 
                 // Show custom toast with the file path
                 showCustomToast("KML data saved to " + fileName, 1000);

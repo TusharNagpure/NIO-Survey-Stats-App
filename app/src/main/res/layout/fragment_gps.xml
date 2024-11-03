@@ -2,7 +2,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
 
     <!-- Big box for maps -->
@@ -33,18 +32,33 @@
             android:text="Area: 0 sq km"
             android:visibility="gone" />
 
+        <!-- Floating Action Button for Options -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/optionsFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|bottom"
+            android:layout_marginBottom="121dp"
+            android:layout_marginStart="10dp"
+            android:backgroundTint="@android:color/white"
+            android:contentDescription="Options"
+            android:src="@drawable/tap_1_128"
+            app:maxImageSize="35dp"
+            app:fabSize="mini"/>
+
         <!-- Floating Action Button for Area Calculation -->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/areaFab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="start|bottom"
-            android:layout_marginBottom="89dp"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginBottom="74dp"
             android:backgroundTint="@android:color/white"
             android:contentDescription="Area Ruler"
             android:src="@drawable/area_icon"
-            app:maxImageSize="45dp"/>
+            app:fabSize="mini"
+            app:maxImageSize="35dp" />
 
 
         <!-- Floating Action Button for Polyline Calculation (Distance) -->
@@ -54,90 +68,101 @@
             android:layout_height="wrap_content"
             android:layout_gravity="start|bottom"
             android:layout_marginBottom="28dp"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="10dp"
             android:backgroundTint="@android:color/white"
             android:contentDescription="Distance Ruler"
             android:src="@drawable/ruler_icon"
-            app:maxImageSize="40dp"/>
+            app:maxImageSize="35dp"
+            app:fabSize="mini"/>
 
     </FrameLayout>
-
-    <!-- Save and Tap Icons -->
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="8dp">
+        android:layout_marginBottom="8dp"
+        android:gravity="center_vertical">
+
+        <!-- New Pause/Play Toggle Button -->
+        <ToggleButton
+            android:id="@+id/pausePlayToggleButton"
+            android:layout_width="45dp"
+            android:layout_height="match_parent"
+            android:alpha="0.5"
+            android:background="@drawable/ic_play_click_foreground"
+            android:padding="5dp"
+            android:textOff=""
+            android:textOn="" />
 
         <!-- Save icon -->
         <ImageView
             android:id="@+id/saveIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
             android:src="@android:drawable/ic_menu_save"
             android:contentDescription="Save Data"
-            android:padding="8dp" />
+            android:padding="5dp" />
 
         <!-- Tap Icons -->
         <ImageView
             android:id="@+id/tap1"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
             android:src="@drawable/icon1"
             android:contentDescription="Tap Data 1"
-            android:padding="8dp"
+            android:padding="5dp"
             android:alpha="0.5"/>
 
-        <!-- 2nd Icon-->
         <ImageView
             android:id="@+id/tap2"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
             android:src="@drawable/icon2"
             android:contentDescription="Tap Data 2"
-            android:padding="8dp"
+            android:padding="5dp"
             android:alpha="0.5"/>
 
-        <!-- 3rd Icon-->
         <ImageView
             android:id="@+id/tap3"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
             android:src="@drawable/icon3"
             android:contentDescription="Tap Data 3"
-            android:padding="8dp"
+            android:padding="5dp"
             android:alpha="0.5"/>
 
-        <!-- 4th Icon-->
         <ImageView
             android:id="@+id/tap4"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
             android:src="@drawable/icon4"
             android:contentDescription="Tap Data 4"
-            android:padding="8dp"
+            android:padding="5dp"
             android:alpha="0.5"/>
 
         <!-- GPS Toggle Button -->
         <ToggleButton
             android:id="@+id/gpsToggleButton"
             android:layout_width="45dp"
-            android:layout_height="match_parent"
+            android:layout_height="45dp"
             android:alpha="0.5"
             android:background="@drawable/connect"
-            android:padding="8dp"
+            android:padding="5dp"
             android:textOff=""
             android:textOn="" />
 
         <!-- Click ImageView to trigger popup menu -->
         <ImageView
             android:id="@+id/click"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/click_foreground"
-            android:contentDescription="Click for Options"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:src="@drawable/delete_foreground"
+            android:contentDescription="Clear markers"
+            android:padding="2dp"
             android:alpha="0.5"/>
     </LinearLayout>
+
+
 
     <!-- Divider -->
     <View
