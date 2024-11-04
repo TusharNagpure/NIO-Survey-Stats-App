@@ -116,6 +116,13 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
     private boolean isReceivingData = false;
     private View recordingIndicator;
     private boolean isRecording = false;
+    private FloatingActionButton terrainFab;
+    private int currentMapTypeIndex = 0;
+    private final int[] mapTypes = {
+            GoogleMap.MAP_TYPE_NORMAL,
+            GoogleMap.MAP_TYPE_TERRAIN,
+            GoogleMap.MAP_TYPE_HYBRID,
+    };
 
 
 
@@ -149,6 +156,8 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         recordingIndicator = new View(getContext()); // Create the indicator view
         recordingIndicator.setLayoutParams(new ViewGroup.LayoutParams(40, 40));
         recordingIndicator.setBackgroundResource(R.drawable.circle_background_green);
+        terrainFab = view.findViewById(R.id.terrainFab);
+        terrainFab.setOnClickListener(v -> cycleMapType());
 
         ((ViewGroup) view).addView(recordingIndicator);
 
@@ -427,8 +436,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
                 } else if (v == saveKmlLabel) {
                     saveDataToKmlFile(fileName);
                 } else if (v == saveBothLabel) {
-                    saveDataToTxtFile(fileName); // Save as TXT
-                    saveDataToKmlFile(fileName); // Save as KML
+                    saveBothFiles(fileName);// Save as KML
                 }
                 dialog.dismiss();
             });
@@ -574,6 +582,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
     public void onMapReady(GoogleMap map) {
         googleMap = map;
         isMapReady = true;
+        googleMap.setMapType(mapTypes[currentMapTypeIndex]);
 
         if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             googleMap.setMyLocationEnabled(true);
@@ -602,6 +611,13 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
             }
         });
         startLocationUpdates(); // Start location updates immediately when the map is ready
+    }
+
+    private void cycleMapType() {
+        if (isMapReady && googleMap != null) {
+            currentMapTypeIndex = (currentMapTypeIndex + 1) % mapTypes.length;
+            googleMap.setMapType(mapTypes[currentMapTypeIndex]);
+        }
     }
 
 
@@ -695,7 +711,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
         getActivity().stopService(serviceIntent);
     }
 
-    private void saveDataToTxtFile(String fileName) {
+    private boolean saveDataToTxtFile(String fileName) {
         OutputStream outputStream = null;
         try {
             // Set up the file details
@@ -731,8 +747,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
                 // Show custom toast with the file path
                 showCustomToast("Data saved to " + fileName, 1000);
 
-                // Clear the data list after saving
-                gpsDataList.clear();
+
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -746,10 +761,11 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
                 }
             }
         }
+        return true;
     }
 
 
-    private void saveDataToKmlFile(String fileName) {
+    private boolean saveDataToKmlFile(String fileName) {
         OutputStream outputStream = null;
         try {
             // Set up the file details
@@ -861,8 +877,7 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
                 // End the KML document
                 outputStream.write("</Document>\n".getBytes());
                 outputStream.write("</kml>\n".getBytes());
-                // Clear the data list after saving
-                gpsDataList.clear();
+
 
                 // Show custom toast with the file path
                 showCustomToast("KML data saved to " + fileName, 1000);
@@ -878,6 +893,20 @@ public class GpsFragment extends Fragment implements OnMapReadyCallback {
                     e.printStackTrace();
                 }
             }
+        }
+        return true;
+    }
+
+    public void saveBothFiles(String fileName) {
+        boolean save1Success = saveDataToKmlFile(fileName);  // Save to KML
+        boolean save2Success = saveDataToTxtFile(fileName);  // Save to another file
+
+        // Clear the list only if both saves were successful
+        if (save1Success && save2Success) {
+            gpsDataList.clear();
+            System.out.println("Both saves completed. gpsDataList cleared.");
+        } else {
+            System.out.println("Save operation failed for one or both files. gpsDataList not cleared.");
         }
     }
 

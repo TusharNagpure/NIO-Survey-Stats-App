@@ -108,6 +108,13 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private com.google.android.gms.maps.model.Polyline polyline;
     private boolean isDistanceCalculationMode = false;
     private FloatingActionButton distanceFab;
+    private FloatingActionButton terrainFab;
+    private int currentMapTypeIndex = 0;
+    private final int[] mapTypes = {
+            GoogleMap.MAP_TYPE_NORMAL,
+            GoogleMap.MAP_TYPE_TERRAIN,
+            GoogleMap.MAP_TYPE_HYBRID,
+    };
 
 
 
@@ -162,6 +169,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         getActivity().registerReceiver(usbReceiver, filter);
+        terrainFab = view.findViewById(R.id.terrainFab);
+        terrainFab.setOnClickListener(v -> cycleMapType());
 
         checkPermissions();
         checkConnectedDevices();
@@ -764,6 +773,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     public void onMapReady(GoogleMap map) {
         googleMap = map;
         isMapReady = true;
+        googleMap.setMapType(mapTypes[currentMapTypeIndex]);
         Log.d(TAG, "Google Map is ready");
 
         if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -791,6 +801,12 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             updateMapMarker(nmeaData);
         }
         bufferedNMEAData.clear();
+    }
+    private void cycleMapType() {
+        if (isMapReady && googleMap != null) {
+            currentMapTypeIndex = (currentMapTypeIndex + 1) % mapTypes.length;
+            googleMap.setMapType(mapTypes[currentMapTypeIndex]);
+        }
     }
 
     @Override

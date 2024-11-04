@@ -18,6 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
 
+
         <!-- Floating TextView for displaying area -->
         <TextView
             android:id="@+id/areaTextView"
@@ -31,6 +32,20 @@
             android:layout_margin="16dp"
             android:text="Area: 0 sq km"
             android:visibility="gone" />
+
+        <!-- Floating Action Button for Options -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/terrainFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|bottom"
+            android:layout_marginBottom="168dp"
+            android:layout_marginStart="10dp"
+            android:backgroundTint="@android:color/white"
+            android:contentDescription="Options"
+            android:src="@drawable/terrain_foreground"
+            app:maxImageSize="35dp"
+            app:fabSize="mini"/>
 
         <!-- Floating Action Button for Options -->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
